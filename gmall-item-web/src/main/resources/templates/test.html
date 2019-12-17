@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+   <link rel="stylesheet" type="text/css" href="testcss.css">
+
+</head>
+<body>
+thymeleaf的用法
+<br/>
+取值:
+<input type="text" th:value="${hello}">
+
+循环:
+<input type="text" th:each="str:${list}"  th:value="${str}">
+
+
+<div th:each="str:${list}" >
+
+    <input type="text" th:value="${str}">
+
+</div>
+<br/>
+
+
+判断:
+<input th:type="text" th:if="${1==1}" th:value="${hello}">
+
+<input  th:type="text" th:value="${1==1}? 1: 2">
+
+<div th:class="red"></div>
+
+<br>
+js调用:<a th:href="'javascript:a(\''+${flag}+'\');'">点我</a>
+
+<script language="JavaScript">
+    function a(flag) {
+        alert(flag)
+
+    }
+
+</script>
+
+
+
+<input type="text" th:value="${pmsSkuInfo?.skuName}">
+
+
+</body>
+</html>
