@@ -19,7 +19,6 @@ public class IndexController {
     SearchService searchService;
 
 
-    @LoginRequired(isNeedeSuccess = false)
     @RequestMapping("/index")
     public String index(){
 

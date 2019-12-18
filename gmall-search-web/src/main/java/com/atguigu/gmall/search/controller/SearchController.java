@@ -10,10 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Controller
 public class SearchController {
@@ -25,7 +22,6 @@ public class SearchController {
     AttrService attrService;
 
     @RequestMapping("/list.html")
-    @LoginRequired
     public String search(ModelMap modelMap, PmsSearchParam pmsSearchParam){
         List<PmsSearchSkuInfo> pmsSearchSkuInfos=searchService.search(pmsSearchParam);
 
@@ -48,7 +44,17 @@ public class SearchController {
          //根据选中的页面属性值删除对应的属性
         String[] valueIds = pmsSearchParam.getValueId();
         if (valueIds!=null&&valueIds.length>0){
-            for (String valueId : valueIds) {
+            //面包屑
+            List<PmsSearchCrumb> pmsSearchCrumbs=new ArrayList<>();
+                for (String valueId : valueIds) {
+
+                // 面包屑请求=当前请求-面包屑的valueID
+                PmsSearchCrumb pmsSearchCrumb = new PmsSearchCrumb();
+                //面包屑url
+                String urlParam = getMyUrlParam(pmsSearchParam, valueId);
+                pmsSearchCrumb.setValueId(valueId);
+                pmsSearchCrumb.setUrlParam(urlParam);
+
                 //游标迭代
                 Iterator<PmsBaseAttrInfo> iterator =pmsBaseAttrInfos.iterator();
                 //判断下一个是否有值
@@ -57,19 +63,54 @@ public class SearchController {
                     List<PmsBaseAttrValue> pmsBaseAttrValues = pmsBaseAtrtInfo.getAttrValueList();
                     for (PmsBaseAttrValue pmsBaseAttrValue : pmsBaseAttrValues) {
                         if (pmsBaseAttrValue.getId().equals(valueId)){
+                            //面包屑名称
+                            pmsSearchCrumb.setValueName(pmsBaseAttrValue.getValueName());
                             iterator.remove();
                         }
 
                     }
 
                 }
+                // 塞入面包屑
+                pmsSearchCrumbs.add(pmsSearchCrumb);
+                
             }
+            //保存到页面上
+            modelMap.put("attrValueSelectedList",pmsSearchCrumbs);
+
         }
 
 
 
-        modelMap.put("attrList",pmsBaseAttrInfos);
-        //属性的请求路径
+
+/*
+
+        //面包屑
+        String[] valueIdSForCrumb = pmsSearchParam.getValueId();
+        if (valueIdSForCrumb!=null&&valueIdSForCrumb.length>0){
+            List<PmsSearchCrumb> pmsSearchCrumbs = new ArrayList<>();
+            //面包屑请求=当前请求-面包屑valueId
+            for (String valueIdForCrumb : valueIdSForCrumb) {
+                PmsSearchCrumb pmsSearchCrumb = new PmsSearchCrumb();
+                //面包屑url
+                String urlParam = getMyUrlParam(pmsSearchParam, valueIdForCrumb);
+                pmsSearchCrumb.setValueId(valueIdForCrumb);
+                pmsSearchCrumb.setUrlParam(urlParam);
+                pmsSearchCrumb.setValueName("不知道");
+                pmsSearchCrumbs.add(pmsSearchCrumb);
+
+            }
+            modelMap.put("attrValueSelectedList",pmsSearchCrumbs);
+
+        }
+*/
+
+
+        if (pmsSearchSkuInfos!=null&&pmsBaseAttrInfos.size()>0){
+            modelMap.put("attrList",pmsBaseAttrInfos);
+        }
+
+        //地址栏
         String urlParam=getMyUrlParam(pmsSearchParam);
         modelMap.put("urlParam",urlParam);
         modelMap.put("skuLsInfoList",pmsSearchSkuInfos);
@@ -78,6 +119,7 @@ public class SearchController {
 
     }
 
+   /* //方法二
     private String getMyUrlParam(PmsSearchParam pmsSearchParam) {
      String urlParam="";
        //获取三级分类id
@@ -108,9 +150,10 @@ public class SearchController {
 
         return urlParam;
         
-    }
+    }*/
 
-    /*private String getMyUrlParam(PmsSearchParam pmsSearchParam) {
+    //方法一                                                    //可变参数
+    private String getMyUrlParam(PmsSearchParam pmsSearchParam,String...valueIdForCrumb) {
         String urlParam="";
         //获取三级分类id
         String catalog3Id = pmsSearchParam.getCatalog3Id();
@@ -135,15 +178,27 @@ public class SearchController {
         }
 
         if (valueIds!=null&&valueIds.length>0){
-            for (String valueId : valueIds) {
-                urlParam=urlParam+"&valueId="+valueId;
+            if (valueIdForCrumb!=null&&valueIdForCrumb.length>0){
+                // 面包屑 = 当前url-面包屑自己valueId
+                for (String valueId : valueIds) {
+                    // 只有当前的valueIdForCrumb不等于要拼接的valueId的时候才加入url(不等于选中的面包屑时就拼接url)
+                    if (!valueId.equals(valueIdForCrumb[0])){
+                        urlParam=urlParam+"&valueId="+valueId;
+                    }
+                }
+            }else {
+                //地址栏
+                for (String valueId : valueIds) {
+                    urlParam=urlParam+"&valueId="+valueId;
 
+                }
             }
+
         }
 
 
         return urlParam;
 
-    }*/
+    }
 
 }
